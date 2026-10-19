@@ -1,6 +1,14 @@
 # 变更记录
 
-## v0.1.0（未发布）
+## v0.1.1（未发布）
+
+- ts-pnpm：新项目在 `package.json` 里用 `"packageManager": "pnpm@10.30.0"` 固定 pnpm 版本；
+  已有项目缺少这个字段时，检查脚本会给出提示。
+  - 原因：Quillarium 接入后，本地机器装的是 pnpm 12，它不再读取 `package.json` 里的
+    `pnpm.overrides`，`pnpm install --frozen-lockfile` 失败，而 CI 用的 pnpm 10 没有问题。
+    新版 pnpm 遇到 `packageManager` 会自动切换到指定版本，本地和 CI 就能保持一致。
+
+## v0.1.0
 
 首个版本：用项目骨架取代原来的 skills。
 
