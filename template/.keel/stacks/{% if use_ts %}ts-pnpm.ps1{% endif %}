@@ -14,6 +14,11 @@ function Get-KeelStackSteps {
     $scripts = if ($package.ContainsKey('scripts') -and $package['scripts']) { $package['scripts'] } else { @{} }
     $steps = [System.Collections.Generic.List[object]]::new()
 
+    if (-not ($package.ContainsKey('packageManager') -and "$($package['packageManager'])".StartsWith('pnpm@'))) {
+        Write-Host ('ts-pnpm：package.json 没有用 "packageManager": "pnpm@x.y.z" 固定 pnpm 版本。' +
+            '不同机器上的 pnpm 主版本不同时，可能读不懂 lockfile 或 overrides。') -ForegroundColor Yellow
+    }
+
     if (-not (Test-Path -LiteralPath (Join-Path $Root 'node_modules'))) {
         $installArgs = if (Test-Path -LiteralPath (Join-Path $Root 'pnpm-lock.yaml')) { @('install', '--frozen-lockfile') } else { @('install') }
         $steps.Add((New-KeelStep -Name '安装依赖' -Command 'pnpm' -Arguments $installArgs))
