@@ -1,0 +1,40 @@
+// 属性测试：这些不变量由人写下，fast-check 自动生成大量输入去验证。
+// 提示：“优惠券越多应付越少”看似合理，但在本规则下并不成立（小计 105 元、用 6 元券后不再满减，反而多付）。
+// 属性测试会立刻找到这类反例，这正是回到 docs/intent.md 确认规则的时机。
+import fc from 'fast-check'
+import { describe, it } from 'vitest'
+import { subtotalCents, totalCents, type PricingInput } from '@{{ project_slug }}/core'
+
+const line = fc.record({
+  unitPriceCents: fc.integer({ min: 0, max: 1_000_000 }),
+  quantity: fc.integer({ min: 0, max: 100 }),
+})
+
+const input: fc.Arbitrary<PricingInput> = fc.record({
+  tier: fc.constantFrom('standard' as const, 'gold' as const),
+  lines: fc.array(line, { maxLength: 10 }),
+  couponCents: fc.integer({ min: 0, max: 2_000_000 }),
+})
+
+describe('计价不变量', () => {
+  it('应付金额不为负，也不超过小计', () => {
+    fc.assert(
+      fc.property(input, (i) => {
+        const total = totalCents(i)
+        return total >= 0 && total <= subtotalCents(i.lines)
+      }),
+    )
+  })
+
+  it('同样的订单，金卡应付不高于普通会员', () => {
+    fc.assert(
+      fc.property(input, (i) => {
+        return totalCents({ ...i, tier: 'gold' }) <= totalCents({ ...i, tier: 'standard' })
+      }),
+    )
+  })
+
+  it('应付金额是整数分', () => {
+    fc.assert(fc.property(input, (i) => Number.isInteger(totalCents(i))))
+  })
+})

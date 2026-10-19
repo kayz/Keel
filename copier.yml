@@ -1,0 +1,83 @@
+_min_copier_version: "9.0.0"
+_subdirectory: template
+_answers_file: .copier-answers.yml
+
+_message_after_copy: |
+  keel 骨架已生成。下一步：
+    1. 填写 docs/intent.md（目标、不做什么、关键决策）。
+    2. 运行 pwsh -File scripts/check-fast.ps1 -ListOnly 查看检查项，再去掉 -ListOnly 运行。
+    3. 新仓库首次推送后，按 .keel/README.md 配置分支保护和 CODEOWNERS。
+
+# 生成后归项目所有的文件：copier update 时如果已存在就不会覆盖。
+_skip_if_exists:
+  - docs/intent.md
+  - "{{ decisions_dir }}/README.md"
+  - scripts/check.local.ps1
+  - .dependency-cruiser.cjs
+  - stryker.config.json
+  - .gitattributes
+  - .editorconfig
+  - "tests/rules/*.csv"
+  - "tests/**/*.test.ts"
+  - "packages/**"
+  - package.json
+  - pnpm-workspace.yaml
+  - tsconfig.base.json
+  - tsconfig.json
+  - vitest.config.ts
+  - eslint.config.js
+  - .prettierrc
+
+project_name:
+  type: str
+  help: 项目名称（用于文档标题）
+  validator: "{% if not project_name.strip() %}项目名称不能为空{% endif %}"
+
+project_description:
+  type: str
+  help: 一句话描述这个项目要解决什么问题
+  default: ""
+
+owner:
+  type: str
+  help: 负责审核意图、契约和验收测试的 GitHub 用户名（写入 CODEOWNERS）
+  default: kayz
+
+adopt_existing:
+  type: bool
+  help: 是否接入已有项目？是：只添加骨架约定，不生成示例代码和包配置
+  default: false
+
+stacks:
+  type: str
+  help: 选择技术栈包（可多选）
+  multiselect: true
+  choices:
+    TypeScript + pnpm workspace: ts-pnpm
+  default: [ts-pnpm]
+
+default_branch:
+  type: str
+  help: 默认分支名
+  default: main
+
+decisions_dir:
+  type: str
+  help: 决策记录（ADR）所在目录；已有项目沿用原来的目录
+  default: docs/decisions
+
+# 以下为派生变量，不会提问。
+project_slug:
+  type: str
+  when: false
+  default: "{{ project_name | lower | replace(' ', '-') | replace('_', '-') }}"
+
+use_ts:
+  type: bool
+  when: false
+  default: "{{ 'ts-pnpm' in stacks }}"
+
+scaffold_ts:
+  type: bool
+  when: false
+  default: "{{ 'ts-pnpm' in stacks and not adopt_existing }}"
