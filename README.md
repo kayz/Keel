@@ -1,82 +1,108 @@
-# Skills
+# keel
 
-面向可信 AI 软件开发的可复用工作流。**PACT 是文档控制台**，与 **VERIFY、OPAID、
-CICD** 共用有效规格、验收场景和执行证据。成员可以使用不同 agent 和工具，项目
-约定的含义与本轮交付范围保持一致。
+keel（龙骨）是 kayz 项目的工程骨架：一个用 [copier](https://copier.readthedocs.io/) 管理的项目模板，
+把多个项目试错中沉淀下来的做法变成新项目的默认起点，并且能随着后续试错持续更新到各个项目。
 
-| Skill | 何时使用 | 交付终点 | 源码入口 |
-| --- | --- | --- | --- |
-| PACT | 建立/诊断/修订项目约定，查看当前交付与验收入口 | 统一文档规范、有效设计、目标与证据的可读入口 | [PACT](pact/skills/pact/SKILL.md) |
-| VERIFY | 开发前设计验收；每次环境交付后验证业务结果 | 基于规格的测试资产、人类复验步骤、绑定环境的业务验证结论 | [VERIFY](verify/SKILL.md) |
-| OPAID | 既有约定内的功能、修复、重构与本地验证 | 精确的本地自测候选和可人工验收的交接 | [OPAID](opaid/SKILL.md) |
-| CICD | 明确授权的版本准备、制品发布、环境交付、晋级、重试或回滚 | 不可变制品、部署技术就绪与交付证据；消费 VERIFY 结论 | [CICD](cicd/SKILL.md) |
+它取代了本仓库原来的 skills（proqaid、opaid、pact、verify、cicd、powershell）。这些 skill 已移到
+[`archive/`](archive/README.md)，那里写明了每个 skill 中仍然有价值的内容去了哪里。
 
-PACT 是 **Project Architecture & Collaboration Toolkit**（项目架构与协作工具包）。
-它在本仓库中是独立子项目；目前提供可使用的 skill、接入参考和模板。CLI、自动安装器
-及各平台插件尚未实现。子项目规格见 [pact/SPEC.md](pact/SPEC.md)。
+## 核心想法
 
-## 四者怎样衔接
+- **约束结果和证据，不约束过程。** 怎么拆任务、是否开子 agent、模块内部怎么写，交给 agent 自己判断。
+- **能机械检查的，就不写成文字。** 依赖方向交给架构检查，预期值的独立性交给受保护目录，发布授权交给
+  GitHub 的保护规则。
+- **四层 spec 由人掌握，实现由 agent 完成。** 意图（`docs/intent.md`）、接口（`contracts/` 和模块入口）、
+  验收测试（`tests/rules|properties|flows`）、架构规则（`.dependency-cruiser.cjs` 等）。改动这四层就是
+  改动 spec，需要人审核。
+- **默认要轻，重的做成可选包。** 骨架一个下午就能跑起来；技术栈包和风险包按需叠加。
+- **规则只因真实的失败而增加，并定期删减。**
 
-1. PACT 维护有效设计与共享文档规范，呈现本轮目标、验收入口、证据和剩余工作。
-2. VERIFY 将约定转为验收场景、独立预期、自动测试资产与人类操作步骤。
-3. OPAID 实现功能，负责单元测试和适用的本地集成，并提前运行可执行的验收测试。
-4. CICD 将明确候选交付到获授权的目标环境，VERIFY 验证实际业务路径。
-5. 测试环境结果满足晋级条件且已有生产授权时，CICD 交付同一制品到生产，VERIFY
-   执行生产适用场景。源码修复归 OPAID；约定含义变化归 PACT。
+## 快速开始
 
-按任务选择所需职责，已有约定清楚时无需重新初始化。同一 agent 或任务可以连续承担
-多个职责，已有授权继续有效。普通提交、代码评审、合并或本地测试通过，不自行扩大为
-发布授权。自动化测试可以由现有 CI 执行，无需因切换 skill 重复运行同一有效检查。
+需要：PowerShell 7（`pwsh`）、git、[uv](https://docs.astral.sh/uv/)。TypeScript 项目还需要 Node.js 22.12+ 和 pnpm。
 
-## 文档就是人类交付接口
-
-采用 [共享文档规范](pact/skills/pact/references/document-protocol.md)，复用现有规格、
-任务记录和测试报告。文档统一表达 **约定 → 验收场景 → 执行证据**，按场景标识关联
-自动测试与人类操作步骤；结果绑定规格修订、候选和环境。保留历史证据，明确未执行、
-阻塞、失败、通过和人类验收的区别。AGENTS 或宿主入口负责导航，不复制整份规格。
-
-现有 [功能规格模板](pact/skills/pact/assets/outcome.md.template) 可按项目结构适配；
-先展示用户结果和验收方法，再链接设计与日志。PACT 的控制台就是这套可读文档及导航，
-当前没有控制台应用或自动编排服务。
-
-项目采用明确模块职责、单一状态所有者和可检查依赖方向；新项目可从模块化单体与
-显式适配器起步，部署拆分由实际需求决定。业务能力有真实操作或观测入口，内部函数
-不逐个建页面。自动测试、真实链路验证与人类验收保留各自的证据边界。
-
-## 项目级使用
-
-选择并复制完整的 skill 文件夹，保留内部引用。宿主支持 `.agents/skills/` 时可用：
-
-```text
-目标项目/
-  AGENTS.md
-  .agents/skills/
-    pact/       ← 本仓 pact/skills/pact/
-    verify/     ← 本仓 verify/
-    opaid/      ← 本仓 opaid/
-    cicd/       ← 本仓 cicd/
+```powershell
+uv tool install copier
 ```
 
-选择需要的技能；日常开发不要求安装发布技能。不要将整个 `pact/` 子项目当作 skill
-复制，也不要让安装结果依赖维护者电脑上的绝对路径。项目记录选用的来源版本/提交；
-本地未提交快照应明确标记，不能作为已发布版本。升级通过可审阅差异保留项目修改。
+新项目：
 
-项目入口记录各 skill 共用的文档规范位置。使用其他宿主布局时适配入口，保持文档
-含义一致。接入 Codex、Cursor、DeepSeek Harness 等宿主时，验证实际加载的规则、
-技能及版本；文件存在不等于加载成功。`agents/openai.yaml` 仅为可选宿主元数据，
-通用工作流无需 OpenAI API、特定 agent 工具、GitHub、Git 或某家 CI 服务。
+```powershell
+copier copy gh:kayz/keel my-project
+cd my-project
+git init -b main
+pwsh -NoProfile -File scripts/check-fast.ps1
+```
 
-项目自行选择源码身份、代码评审、测试框架、构建和发布方式。CICD 要求可追溯候选与
-不可变制品；Git tag、PR/MR、远程 CI、容器和注册表属于项目策略。已有严格发布策略
-仍然有效，容器专用规则仅在选择相应 profile 时适用。
+接入已有项目（只添加骨架约定，不生成示例代码和包配置）：
 
-## 其他技能与现有项目
+```powershell
+cd existing-project
+git switch -c adopt-keel
+copier copy gh:kayz/keel . -d adopt_existing=true
+```
 
-- [powershell](powershell/SKILL.md)：Windows 命令与脚本的技术辅助技能。
-- [proqaid](proqaid/SKILL.md)：保留给已选择该流程的项目；不属于这次四技能默认组合。
-  不与 PACT/VERIFY/OPAID/CICD 叠加运行第二套迭代管理。迁移已有项目时，明确选定工作流并
-  处理冲突，保留仍有价值的决策和证据。
+接入后需要手动做的事见生成的 `.keel/README.md`，并把项目已有的检查命令接到 `scripts/check.local.ps1`。
 
-各 skill 的 SKILL.md 定义其操作规则。项目有效规格和明确用户授权决定具体范围；
-共享技能不替代项目的语义决策，也不改变宿主权限。任务状态继续使用现有编排工具、
-issue 或唯一迭代 brief，避免重复账本。
+更新到 keel 的新版本：
+
+```powershell
+copier update
+```
+
+`copier update` 会用三方合并把 keel 的改动带进来。`docs/intent.md`、`scripts/check.local.ps1`、
+`.dependency-cruiser.cjs`、测试内容和源码在生成后归项目所有，不会被覆盖。
+
+## 生成的项目长什么样
+
+```text
+AGENTS.md                  工作方式和不可逆操作的边界（keel 部分 + 项目补充）
+docs/intent.md             意图：目标、不做什么、关键决策、验收入口
+docs/decisions/            需要时才写的简短 ADR
+contracts/                 跨语言契约：OpenAPI / Protobuf / JSON Schema
+tests/AGENTS.md            写验收测试的原则
+tests/rules/               决策表（受保护）
+tests/properties/          不变量（受保护）
+tests/flows/               状态机模型（受保护）
+tests/characterization/    已有代码的特征测试
+tests/e2e/                 少量关键用户路径
+scripts/check-fast.ps1     快速检查
+scripts/check.ps1          完整检查
+scripts/mutation.ps1       变异测试（按需）
+scripts/check.local.ps1    项目自己的检查步骤
+.keel/                     骨架内部文件，由 keel 管理
+.github/CODEOWNERS         受保护路径的审核人
+```
+
+## 技术栈包
+
+| 包      | 原型                  | 架构检查           | 属性 / 状态机测试 | 变异测试 |
+| ------- | --------------------- | ------------------ | ----------------- | -------- |
+| ts-pnpm | Quillarium、coga-core | dependency-cruiser | fast-check        | Stryker  |
+
+计划中：python-hex（kairoscore）、web-react、rust-workspace（ficant）、jvm-maven、go。只在有项目真的
+需要时才做。
+
+## 修改 keel
+
+1. 只有其他项目也会遇到的问题才进入 keel；只影响一个项目的，改那个项目自己的文件。
+2. 能做成检查、测试或平台规则的，就不写成 AGENTS.md 里的文字。
+3. 改完运行自测，并在 `CHANGELOG.md` 写清楚每项改动对应的真实问题：
+
+   ```powershell
+   pwsh -NoProfile -File tests/test-template.ps1
+   ```
+
+4. 打 tag 发版（`vX.Y.Z`），各项目按需 `copier update`。
+5. 每个大版本审一遍：长期没有触发、或模型已经不再犯的规则，删掉。
+
+## 用户级配置
+
+`user/AGENTS.user.md` 是本机环境说明（PowerShell 7、UTF-8 等），适用于所有项目。写入 Claude Code 和
+Codex 的用户级配置：
+
+```powershell
+pwsh -NoProfile -File user/install-user-config.ps1
+```
+
+脚本只替换标记之间的内容，可以重复运行。

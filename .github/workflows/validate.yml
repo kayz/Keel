@@ -1,0 +1,27 @@
+name: validate
+
+# 与其他仓库一致：普通 push 和 PR 不自动运行，只在手动触发或打版本 tag 时运行。
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install copier
+        run: pipx install copier
+      - name: Template self-test
+        shell: pwsh
+        run: ./tests/test-template.ps1

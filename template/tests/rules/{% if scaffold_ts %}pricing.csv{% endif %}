@@ -1,0 +1,6 @@
+tier,subtotal_cents,coupon_cents,expected_total_cents,note
+standard,9900,0,9900,未达满减
+standard,10000,0,9000,满 100 减 10
+gold,10000,0,8550,满减后再打九五折
+gold,10000,2000,7600,优惠券先于满减，扣券后不足 100 不再满减
+standard,500,800,0,优惠券超过订单金额时应付为 0

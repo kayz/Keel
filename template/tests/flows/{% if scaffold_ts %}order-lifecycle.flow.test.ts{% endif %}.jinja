@@ -1,0 +1,57 @@
+// 状态机测试：下面的 MODEL 由人定义，独立于实现。fast-check 随机生成动作序列，
+// 同时在模型和真实实现上执行，每一步比较状态；不允许的动作必须被实现拒绝。
+import fc from 'fast-check'
+import { describe, expect, it } from 'vitest'
+import { OrderLifecycle, type OrderAction, type OrderStatus } from '@{{ project_slug }}/core'
+
+const MODEL: Record<OrderStatus, Partial<Record<OrderAction, OrderStatus>>> = {
+  created: { pay: 'paid', cancel: 'cancelled' },
+  paid: { ship: 'shipped', cancel: 'refunded' },
+  shipped: {},
+  cancelled: {},
+  refunded: {},
+}
+
+interface Model {
+  status: OrderStatus
+}
+
+class Act implements fc.Command<Model, OrderLifecycle> {
+  constructor(readonly action: OrderAction) {}
+  check(): boolean {
+    return true
+  }
+  run(model: Model, real: OrderLifecycle): void {
+    const next = MODEL[model.status][this.action]
+    if (next === undefined) {
+      expect(() => real.apply(this.action)).toThrow()
+    } else {
+      real.apply(this.action)
+      model.status = next
+    }
+    expect(real.status).toBe(model.status)
+  }
+  toString(): string {
+    return this.action
+  }
+}
+
+const commands = [
+  fc.constant(new Act('pay')),
+  fc.constant(new Act('ship')),
+  fc.constant(new Act('cancel')),
+]
+
+describe('订单状态流转', () => {
+  it('任意动作序列下，实现与模型保持一致', () => {
+    fc.assert(
+      fc.property(fc.commands(commands, { maxCommands: 20 }), (cmds) => {
+        const setup = (): { model: Model; real: OrderLifecycle } => ({
+          model: { status: 'created' },
+          real: new OrderLifecycle(),
+        })
+        fc.modelRun(setup, cmds)
+      }),
+    )
+  })
+})

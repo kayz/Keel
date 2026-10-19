@@ -2,3 +2,6 @@
 .DS_Store
 Thumbs.db
 *.tmp
+node_modules/
+.stryker-tmp/
+reports/

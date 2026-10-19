@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+reports/
+.stryker-tmp/
+.copier-answers.yml
+# 由 keel 管理的文件保持 keel 自己的格式
+.keel/
