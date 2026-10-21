@@ -24,12 +24,16 @@ function Get-KeelSteps {
     )
     $steps = [System.Collections.Generic.List[object]]::new()
 
+    $settings = Get-KeelSettings -Root $Root
+
     if ($Mode -ne 'mutation') {
         $guard = Join-Path $Root '.keel/protected-changes.ps1'
         $steps.Add((New-KeelStep -Name '受保护文件改动' -Command 'pwsh' -Arguments @('-NoProfile', '-NonInteractive', '-File', $guard)))
+        if ($settings.PSObject.Properties.Name -contains 'authority') {
+            $authorityCheck = Join-Path $Root '.keel/authority-check.ps1'
+            $steps.Add((New-KeelStep -Name '权威文档' -Command 'pwsh' -Arguments @('-NoProfile', '-NonInteractive', '-File', $authorityCheck)))
+        }
     }
-
-    $settings = Get-KeelSettings -Root $Root
     foreach ($stack in @($settings.stacks)) {
         $stackFile = Join-Path $Root ".keel/stacks/$stack.ps1"
         if (-not (Test-Path -LiteralPath $stackFile)) {

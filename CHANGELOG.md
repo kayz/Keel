@@ -1,5 +1,12 @@
 # 变更记录
 
+## v0.2.0（未发布）
+
+- 新增 `authority_repo` 选项：判定权威（意图、范围、验收）放在另一个私有仓库时使用。`AGENTS.md` 与
+  `docs/intent.md` 改为指向 authority；检查时运行 `.keel/authority-check.ps1`，校验本地克隆里
+  `authority-manifest.json` 登记的文档哈希。找不到克隆时只提示，不失败。
+  - 原因：ficant 的代码公开、SPEC 私有，原来的 keel 只支持 spec 与代码在同一个仓库。
+
 ## v0.1.1（未发布）
 
 - ts-pnpm：新项目在 `package.json` 里用 `"packageManager": "pnpm@10.30.0"` 固定 pnpm 版本；

@@ -93,6 +93,40 @@ try {
     & git -C $new checkout -q -- tests/rules/pricing.csv
     Assert-LastExit 'git checkout'
 
+    Write-Host '== 5. 外部 authority'
+    $ext = Join-Path $work 'ext-app'
+    $authority = Join-Path $work 'ext-authority'
+    New-Item -ItemType Directory -Path $ext, $authority | Out-Null
+    $specPath = Join-Path $authority 'SPEC.md'
+    Set-Content -LiteralPath $specPath -Value '# SPEC' -Encoding utf8NoBOM
+    $specHash = (Get-FileHash -LiteralPath $specPath -Algorithm SHA256).Hash
+    $manifest = [ordered]@{ schema = 'test'; documents = @([ordered]@{ path = 'SPEC.md'; sha256 = $specHash }) }
+    $manifest | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $authority 'authority-manifest.json') -Encoding utf8NoBOM
+    Initialize-GitRepo -Path $authority
+    Set-Content -LiteralPath (Join-Path $ext 'package.json') -Value $originalPackage -Encoding utf8NoBOM
+    Initialize-GitRepo -Path $ext
+    & copier copy --quiet --defaults -d 'project_name=Ext' -d 'adopt_existing=true' -d 'authority_repo=kayz/ext-authority' $repo $ext
+    Assert-LastExit 'copier copy（外部 authority）'
+    $agents = Get-Content -LiteralPath (Join-Path $ext 'AGENTS.md') -Raw -Encoding utf8
+    if (-not $agents.Contains('kayz/ext-authority')) { throw 'AGENTS.md 应指向外部 authority' }
+    $listing = & pwsh -NoProfile -NonInteractive -File (Join-Path $ext 'scripts/check-fast.ps1') -ListOnly | Out-String
+    Assert-LastExit 'check-fast -ListOnly（外部 authority）'
+    if (-not $listing.Contains('权威文档')) { throw 'check-fast 应包含“权威文档”步骤' }
+    $authorityCheck = Join-Path $ext '.keel/authority-check.ps1'
+    & pwsh -NoProfile -NonInteractive -File $authorityCheck
+    Assert-LastExit 'authority-check（哈希吻合）'
+    Add-Content -LiteralPath $specPath -Value '篡改' -Encoding utf8NoBOM
+    & pwsh -NoProfile -NonInteractive -File $authorityCheck
+    if ($LASTEXITCODE -eq 0) { throw '文档被改动后，authority-check 应该失败' }
+    $env:KEEL_AUTHORITY_ROOT = Join-Path $work 'missing-authority'
+    try {
+        & pwsh -NoProfile -NonInteractive -File $authorityCheck
+        Assert-LastExit 'authority-check（找不到克隆时只提示）'
+    }
+    finally {
+        Remove-Item Env:KEEL_AUTHORITY_ROOT -ErrorAction SilentlyContinue
+    }
+
     Write-Host 'keel 自测全部通过。' -ForegroundColor Green
 }
 finally {

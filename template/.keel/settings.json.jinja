@@ -1,4 +1,8 @@
 {
   "default_branch": {{ default_branch | tojson }},
-  "stacks": {{ stacks | tojson }}
+  "stacks": {{ stacks | tojson }}{% if external_authority %},
+  "authority": {
+    "repo": {{ authority_repo | tojson }},
+    "default_path": {{ ('../' ~ authority_repo.split('/')[-1]) | tojson }}
+  }{% endif %}
 }
