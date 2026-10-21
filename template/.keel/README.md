@@ -10,6 +10,7 @@
 | `stacks/*.ps1`                | 各技术栈包的检查步骤                                                          |
 | `protected-paths.txt`         | 受保护的路径，与 `.github/CODEOWNERS` 一致                                    |
 | `protected-changes.ps1`       | 列出当前分支改动了哪些受保护文件                                              |
+| `authority-check.ps1`         | 配置了外部 authority 时，校验其本地克隆的 manifest 哈希                       |
 | `dependency-cruiser.base.cjs` | TypeScript 架构规则的基础部分（项目规则写在根目录 `.dependency-cruiser.cjs`） |
 
 ## 新仓库首次推送后

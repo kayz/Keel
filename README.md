@@ -44,6 +44,13 @@ copier copy gh:kayz/keel . -d adopt_existing=true
 
 接入后需要手动做的事见生成的 `.keel/README.md`，并把项目已有的检查命令接到 `scripts/check.local.ps1`。
 
+判定权威（意图、范围、验收）放在另一个私有仓库时，加上 `authority_repo`。检查会校验相邻目录（或
+`KEEL_AUTHORITY_ROOT` 指定位置）里 authority 克隆的 `authority-manifest.json`：
+
+```powershell
+copier copy gh:kayz/keel . -d adopt_existing=true -d authority_repo=kayz/ficant-authority
+```
+
 更新到 keel 的新版本：
 
 ```powershell

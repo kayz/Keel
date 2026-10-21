@@ -66,6 +66,12 @@ decisions_dir:
   help: 决策记录（ADR）所在目录；已有项目沿用原来的目录
   default: docs/decisions
 
+authority_repo:
+  type: str
+  help: 判定权威（意图、范围、验收）放在另一个私有仓库时，填写 owner/repo；留空表示放在本仓库
+  default: ""
+  validator: "{% if authority_repo and authority_repo.count('/') != 1 %}格式应为 owner/repo{% endif %}"
+
 # 以下为派生变量，不会提问。
 project_slug:
   type: str
@@ -81,3 +87,8 @@ scaffold_ts:
   type: bool
   when: false
   default: "{{ 'ts-pnpm' in stacks and not adopt_existing }}"
+
+external_authority:
+  type: bool
+  when: false
+  default: "{{ authority_repo != '' }}"

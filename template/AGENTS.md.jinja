@@ -6,8 +6,11 @@
 
 ## 工作方式（keel）
 
-- 意图、范围和不做的事见 `docs/intent.md`；重要决策见 `{{ decisions_dir }}/`。
-- 跨模块、跨语言的接口以 `contracts/` 和各模块的公开入口为准。
+{% if external_authority %}- 判定权威（意图、范围、验收）在私有仓库 `{{ authority_repo }}`，本仓库的 `docs/intent.md` 只是公开摘要和入口；
+  两者冲突时以 authority 为准。拿不到 authority 时直接说明，不要猜测其内容。
+- 重要决策见 `{{ decisions_dir }}/`。
+{% else %}- 意图、范围和不做的事见 `docs/intent.md`；重要决策见 `{{ decisions_dir }}/`。
+{% endif %}- 跨模块、跨语言的接口以 `contracts/` 和各模块的公开入口为准。
 - 如何拆分任务、是否使用子 agent、模块内部怎么写，由你自行判断。
 - 产品含义不清楚时先问；实现细节自己决定，不要为常规选择请求确认。
 - 不要为了让实现通过而修改 `tests/rules/`、`tests/properties/`、`tests/flows/`、`contracts/`
