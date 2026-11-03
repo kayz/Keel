@@ -7,6 +7,14 @@
   - 原因：Quillarium 接入后，本地机器装的是 pnpm 12，它不再读取 `package.json` 里的
     `pnpm.overrides`，`pnpm install --frozen-lockfile` 失败，而 CI 用的 pnpm 10 没有问题。
     新版 pnpm 遇到 `packageManager` 会自动切换到指定版本，本地和 CI 就能保持一致。
+- 仓库根目录补齐 `.gitattributes`（`* text=auto eol=lf`）。
+  - 原因：Windows 上 `core.autocrlf=true` 时克隆 keel 会把 `template/` 下非 `.jinja` 文件检出为 CRLF，
+    `copier copy` 原样复制后导致新项目首次运行 `prettier --check .` 报 13 个文件换行符错误。
+- 验收与架构约束：
+  - `tests/AGENTS.md` 补充两条验收原则：涉及 I/O、异步队列或长任务时须覆盖慢速/失败注入、中途取消与中断恢复；涉及昂贵 I/O 或解码时须断言底层读取/调用次数或资源上限。
+  - `docs/intent.md` 在“验收入口”提示填写大文件、远端 I/O 或高频交互的硬门槛。
+  - `dependency-cruiser.base.cjs` 新增 `core-no-ui-packages`，禁止 `src/domain/` 与 `src/application/` 直接依赖 `electron`、`react` 等宿主或界面框架。
+  - 原因：Fovea 在 200+ 单元测试全绿的情况下，遇到 NAS 真实 187 张 CR3 时暴露出重复回源、长任务取消无响应、UI 与后台 I/O 争用；Quillarium 桌面端测试也曾因耦合 Electron 触发下载阻塞。把无头核心（Humble View）、故障/取消路径和 I/O 次数断言前置到模板与架构检查中。
 
 ## v0.1.0
 
