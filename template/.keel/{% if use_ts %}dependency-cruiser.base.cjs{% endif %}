@@ -44,6 +44,13 @@ module.exports = {
       to: { path: '(^|/)src/(adapters|infrastructure|infra|ui)/' },
     },
     {
+      name: 'core-no-ui-packages',
+      severity: 'error',
+      comment: '领域与应用层保持无头（Humble View），不直接依赖宿主或界面框架，以便无窗口验收测试。',
+      from: { path: '(^|/)src/(domain|application)/' },
+      to: { path: '(^|/)node_modules/(electron|react|react-dom|vue|svelte|@tauri-apps)(/|$)' },
+    },
+    {
       name: 'no-deep-import-across-packages',
       severity: 'error',
       comment: '跨 package 只能通过对方的公开入口导入，不能直接引用对方 src 里的文件。',

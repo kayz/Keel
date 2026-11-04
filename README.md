@@ -2,6 +2,7 @@
 
 keel（龙骨）是 kayz 项目的工程骨架：一个用 [copier](https://copier.readthedocs.io/) 管理的项目模板，
 把多个项目试错中沉淀下来的做法变成新项目的默认起点，并且能随着后续试错持续更新到各个项目。
+keel 负责什么、不负责什么，见 [SCOPE.md](SCOPE.md)。
 
 它取代了本仓库原来的 skills（proqaid、opaid、pact、verify、cicd、powershell）。这些 skill 已移到
 [`archive/`](archive/README.md)，那里写明了每个 skill 中仍然有价值的内容去了哪里。
